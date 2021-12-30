@@ -1,0 +1,5 @@
+version: "2.1"
+services:
+  dummyip:
+    build: .
+    image: "mattirantakomi/dummyip:20211230-8"

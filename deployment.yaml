@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dummyip
+  namespace: dummyip
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dummyip
+  template:
+    metadata:
+      labels:
+        app: dummyip
+    spec:
+      volumes:
+        - name: dev
+          hostPath:
+            path: /dev
+            type: Directory
+        - name: lib-modules
+          hostPath:
+            path: /lib/modules
+            type: Directory
+      hostNetwork: true
+      containers:
+        - name: dummyip
+          image: mattirantakomi/dummyip:20211230-8
+          securityContext:
+            privileged: true
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "10m"
+            limits:
+              memory: "256Mi"
+              cpu: "1"
+          volumeMounts:
+            - name: dev
+              mountPath: /dev
+            - name: lib-modules
+              mountPath: /lib/modules
+          # Comment out ports section if env PORT value is set to "0"
+          ports:
+          - containerPort: 1337 # Port to listen on node to check that public ip -> private ip NAT/port forwarding is working
+            hostPort: 1337 # Same as containerPort
+          env:
+            - name: INTERFACE
+              value: "dummy0" # Interface name to create on host node
+            - name: PORT
+              value: "1337" # Same as containerPort, set to "0" to disable NAT/port forward test
+            - name: NODENAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: PODNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+      # Assign to particular node by hostname
+      # nodeSelector:
+      #   kubernetes.io/hostname: worker-123
+
